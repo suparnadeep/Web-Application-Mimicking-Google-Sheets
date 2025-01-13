@@ -1,2 +1,121 @@
 # Google App Engine generated folder
 appengine-generated/
+const express = require('express');
+const mongoose = require('mongoose');
+const app = express();
+
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect('your_mongodb_connection_string', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log('Connected to MongoDB');
+}).catch(err => {
+    console.error(err);
+});
+
+// Routes
+app.use('/api/sheets', require('./routes/sheetRoutes'));
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+const mongoose = require('mongoose');
+
+const SheetSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    data: { type: Array, default: [] }
+});
+
+module.exports = mongoose.model('Sheet', SheetSchema);
+const express = require('express');
+const router = express.Router();
+const Sheet = require('../models/Sheet');
+
+router.post('/', async (req, res) => {
+    try {
+        const newSheet = new Sheet(req.body);
+        const savedSheet = await newSheet.save();
+        res.json(savedSheet);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.get('/:id', async (req, res) => {
+    try {
+        const sheet = await Sheet.findById(req.params.id);
+        res.json(sheet);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+module.exports = router;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Clone</title>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+
+ReactDOM.render(<App />, document.getElementById('root'));
+import React, { useState } from 'react';
+import Sheet from './components/Sheet';
+
+const App = () => {
+    const [data, setData] = useState([
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', '']
+    ]);
+
+    return (
+        <div className="App">
+            <h1>Google Sheets Clone</h1>
+            <Sheet data={data} setData={setData} />
+        </div>
+    );
+};
+
+export default App;
+import React from 'react';
+
+const Sheet = ({ data, setData }) => {
+    const handleChange = (e, rowIndex, colIndex) => {
+        const newData = [...data];
+        newData[rowIndex][colIndex] = e.target.value;
+        setData(newData);
+    };
+
+    return (
+        <div className="sheet">
+            {data.map((row, rowIndex) => (
+                <div key={rowIndex} className="row">
+                    {row.map((cell, colIndex) => (
+                        <input
+                            key={colIndex}
+                            value={cell}
+                            onChange={(e) => handleChange(e, rowIndex, colIndex)}
+                        />
+                    ))}
+                </div>
+            ))}
+        </div>
+    );
+};
+
+export default Sheet;
